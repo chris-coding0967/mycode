@@ -1,0 +1,27 @@
+---
+- name: Using cli_command agnostic modules
+  hosts: arista_switches
+  gather_facts: false
+  connection: network_cli    # required for ansible to use CLI over SSH 
+  become: yes                # run with privilege
+  become_method: enable      # use in place of "sudo"
+
+  vars:
+    ansible_ssh_pass: alta3
+
+  tasks:
+    - name:  show switch interfaces
+      ansible.netcommon.cli_command:
+        command: "{{ item }}"    # item is replaced by the next up in the list
+      loop:
+        - show interfaces
+      register: results     # variable to register with JSON response to eos_command module
+                          # results of both commands are stored in this var "results"
+
+    - name: only show switch "just" the JSON returned to the command "show interface"
+      debug:
+        var: results.results[0].stdout_lines[2]
+
+
+#         var: stdout_lines #"{{ Management1 }}"
+#         var: results {{ results.stdout| 'Internet address' }}
